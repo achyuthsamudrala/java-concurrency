@@ -25,6 +25,22 @@ public class SingleThreadedTokenBucketFilter {
                 "Granting " + Thread.currentThread().getName() + " token at " + lastRequestTime / 1_000_000_000);
     }
 
+    /*
+        Allow or deny requests based on availability of tokens.
+     */
+    synchronized boolean getTokens(int tokens) throws InterruptedException {
+        refill();
+        if (currentBucketSize < tokens) {
+            return false;
+        } else {
+            currentBucketSize -= tokens;
+        }
+
+        System.out.println(
+                "Granting " + Thread.currentThread().getName() + " tokens at " + lastRequestTime / 1_000_000_000);
+        return true;
+    }
+
     void refill() {
         long now = System.nanoTime();
         long tokensToAdd = (now - lastRequestTime) * refillRate / 1_000_000_000;
